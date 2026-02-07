@@ -2,6 +2,7 @@ const express = require("express");
 const { spawn, execFileSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 
 const app = express();
 const PORT = 3000;
@@ -120,6 +121,8 @@ app.get("/api/download", (req, res) => {
   if (type === "video") {
     args.push(
       "-f", "bv*+ba/b",
+      "--merge-output-format", "mp4",
+      "--paths", `temp:${os.tmpdir()}`,
       "--restrict-filenames",
       "--newline",
       "-o", path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),

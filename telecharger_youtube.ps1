@@ -28,8 +28,25 @@ if (!(Test-Path $ytDlpPath)) {
     }
 }
 
-Write-Host "`nVerification des mises a jour de yt-dlp..." -ForegroundColor DarkGray
-& $ytDlpPath -U | Out-Null
+# Mise a jour de yt-dlp vers la derniere version
+Write-Host "`nMise a jour de yt-dlp..." -ForegroundColor DarkYellow
+try {
+    $updateOutput = & $ytDlpPath -U 2>&1
+    $updateText = $updateOutput | Out-String
+    if ($updateText -match "up to date|Updated yt-dlp") {
+        Write-Host "yt-dlp est a jour." -ForegroundColor Green
+    } else {
+        Write-Host $updateText -ForegroundColor Gray
+    }
+} catch {
+    Write-Host "Mise a jour via -U echouee, telechargement depuis GitHub..." -ForegroundColor DarkYellow
+    try {
+        Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile $ytDlpPath -UseBasicParsing
+        Write-Host "yt-dlp mis a jour avec succes." -ForegroundColor Green
+    } catch {
+        Write-Host "Impossible de mettre a jour yt-dlp. On continue avec la version actuelle." -ForegroundColor DarkYellow
+    }
+}
 
 Write-Host "--------------------------------------" -ForegroundColor DarkCyan
 Write-Host " URL      : $Url" -ForegroundColor Cyan
@@ -47,7 +64,7 @@ $cleanedTitle = $cleanedTitle.Substring(0, [Math]::Min(100, $cleanedTitle.Length
 # Téléchargement de la vidéo ou de l'audio
 switch ($Type) {
     "video" {
-        & $ytDlpPath -f "bv*+ba/b" --restrict-filenames -o "$DowloaderFolder\mp3_$cleanedTitle.%(ext)s" $Url --ffmpeg-location $FFmpegPath
+        & $ytDlpPath -f "bv*+ba/b" --merge-output-format mp4 --paths "temp:$env:TEMP" --restrict-filenames -o "$DowloaderFolder\mp4_$cleanedTitle.%(ext)s" $Url --ffmpeg-location $FFmpegPath
     }
     "audio" {
         & $ytDlpPath -f bestaudio --extract-audio --audio-format mp3 --restrict-filenames -o "$DowloaderFolder\mp4_$cleanedTitle.%(ext)s" $Url --ffmpeg-location $FFmpegPath
