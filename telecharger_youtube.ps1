@@ -6,8 +6,29 @@ param(
     [string]$Type
 )
 
-$DowloaderFolder = "C:\Users\Jacques Lenovo\Desktop\yt-downloader\Videos_YouTube"
-$FFmpegPath = "C:\ffmpeg\bin\ffmpeg.exe"  # Remplace ce chemin par celui où tu as installé FFmpeg
+$DowloaderFolder = Join-Path ([Environment]::GetFolderPath("Desktop")) "yt-downloader\Videos_YouTube"
+$FFmpegPath = "C:\ffmpeg\bin\ffmpeg.exe"
+
+# Installe ffmpeg si introuvable
+if (!(Test-Path $FFmpegPath)) {
+    Write-Host "ffmpeg introuvable. Telechargement automatique..." -ForegroundColor DarkYellow
+    try {
+        $ffmpegZip = Join-Path $env:TEMP "ffmpeg.zip"
+        $ffmpegExtract = Join-Path $env:TEMP "ffmpeg-extract"
+        Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile $ffmpegZip -UseBasicParsing
+        Expand-Archive -Path $ffmpegZip -DestinationPath $ffmpegExtract -Force
+        $ffmpegDir = Get-ChildItem $ffmpegExtract -Directory | Select-Object -First 1
+        if (!(Test-Path "C:\ffmpeg")) { New-Item -ItemType Directory -Path "C:\ffmpeg" | Out-Null }
+        Copy-Item -Path (Join-Path $ffmpegDir.FullName "bin") -Destination "C:\ffmpeg\bin" -Recurse -Force
+        Remove-Item $ffmpegZip -Force -ErrorAction SilentlyContinue
+        Remove-Item $ffmpegExtract -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "ffmpeg installe avec succes." -ForegroundColor Green
+    } catch {
+        Write-Host "Impossible d'installer ffmpeg automatiquement: $_" -ForegroundColor Red
+        Write-Host "Telecharge-le manuellement depuis https://ffmpeg.org/download.html" -ForegroundColor Yellow
+        exit 1
+    }
+}
 
 # Vérifie si le dossier de téléchargement existe
 if (!(Test-Path $DowloaderFolder)) {

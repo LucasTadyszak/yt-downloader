@@ -15,6 +15,39 @@ if (!fs.existsSync(DOWNLOAD_FOLDER)) {
   fs.mkdirSync(DOWNLOAD_FOLDER, { recursive: true });
 }
 
+// Installe ffmpeg s'il n'est pas présent
+const FFMPEG_PATH = "C:\\ffmpeg\\bin\\ffmpeg.exe";
+function installFfmpeg() {
+  if (fs.existsSync(FFMPEG_PATH)) return;
+
+  console.log("ffmpeg introuvable. Telechargement automatique...");
+  try {
+    const zipPath = path.join(os.tmpdir(), "ffmpeg.zip");
+    const extractPath = path.join(os.tmpdir(), "ffmpeg-extract");
+
+    execFileSync("powershell", [
+      "-Command",
+      `Invoke-WebRequest -Uri 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip' -OutFile '${zipPath}' -UseBasicParsing`,
+    ], { stdio: "inherit", timeout: 300000 });
+
+    execFileSync("powershell", [
+      "-Command",
+      `Expand-Archive -Path '${zipPath}' -DestinationPath '${extractPath}' -Force; ` +
+      `$dir = Get-ChildItem '${extractPath}' -Directory | Select-Object -First 1; ` +
+      `if (!(Test-Path 'C:\\ffmpeg')) { New-Item -ItemType Directory -Path 'C:\\ffmpeg' | Out-Null }; ` +
+      `Copy-Item -Path (Join-Path $dir.FullName 'bin') -Destination 'C:\\ffmpeg\\bin' -Recurse -Force; ` +
+      `Remove-Item '${zipPath}' -Force -ErrorAction SilentlyContinue; ` +
+      `Remove-Item '${extractPath}' -Recurse -Force -ErrorAction SilentlyContinue`,
+    ], { stdio: "inherit", timeout: 300000 });
+
+    console.log("ffmpeg installe avec succes.");
+  } catch {
+    console.log("Impossible d'installer ffmpeg automatiquement.");
+    console.log("Telecharge-le depuis https://ffmpeg.org/download.html et place-le dans C:\\ffmpeg\\bin\\");
+  }
+}
+installFfmpeg();
+
 // Met à jour yt-dlp au démarrage du serveur
 function updateYtDlp() {
   const tempPath = YT_DLP_PATH.replace(".exe", "-new.exe");
