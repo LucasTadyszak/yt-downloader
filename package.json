@@ -1,0 +1,12 @@
+{
+  "name": "yt-downloader-web",
+  "version": "1.0.0",
+  "description": "Interface web pour télécharger des vidéos et audios YouTube",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

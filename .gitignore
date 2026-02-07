@@ -1,3 +1,7 @@
 *.webm
 *.mp4
 *.zip
+*.mp3
+*.exe
+node_modules/
+Downloads/

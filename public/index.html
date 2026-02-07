@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Téléchargeur YouTube</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f0f;
+      color: #e1e1e1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      padding: 24px 0;
+      text-align: center;
+      border-bottom: 2px solid #e63946;
+    }
+
+    header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    header h1 span {
+      color: #e63946;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      padding: 32px 20px;
+    }
+
+    /* Section téléchargement */
+    .download-card {
+      background: #1a1a2e;
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 24px;
+      border: 1px solid #2a2a4a;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .url-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: #0f0f1a;
+      border: 2px solid #2a2a4a;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 15px;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .url-input:focus {
+      border-color: #e63946;
+    }
+
+    .url-input::placeholder {
+      color: #555;
+    }
+
+    /* Boutons type */
+    .type-selector {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .type-btn {
+      flex: 1;
+      padding: 14px;
+      border: 2px solid #2a2a4a;
+      background: #0f0f1a;
+      color: #aaa;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .type-btn:hover {
+      border-color: #555;
+      color: #fff;
+    }
+
+    .type-btn.active {
+      border-color: #e63946;
+      background: rgba(230, 57, 70, 0.1);
+      color: #fff;
+    }
+
+    .type-btn .icon {
+      font-size: 20px;
+    }
+
+    /* Bouton télécharger */
+    .download-btn {
+      width: 100%;
+      padding: 16px;
+      background: #e63946;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+
+    .download-btn:hover:not(:disabled) {
+      background: #c1121f;
+    }
+
+    .download-btn:disabled {
+      background: #444;
+      cursor: not-allowed;
+      color: #888;
+    }
+
+    /* Barre de progression */
+    .progress-section {
+      display: none;
+      margin-top: 24px;
+    }
+
+    .progress-section.visible {
+      display: block;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: #0f0f1a;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #e63946, #ff6b6b);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    .progress-text {
+      font-size: 13px;
+      color: #aaa;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    /* Console de logs */
+    .log-box {
+      background: #0a0a12;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #7a7a9a;
+    }
+
+    .log-box .log-line {
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .log-box .log-success {
+      color: #4ade80;
+    }
+
+    .log-box .log-error {
+      color: #f87171;
+    }
+
+    /* Message de statut */
+    .status-msg {
+      display: none;
+      padding: 14px 16px;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .status-msg.success {
+      display: block;
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid #4ade80;
+      color: #4ade80;
+    }
+
+    .status-msg.error {
+      display: block;
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid #f87171;
+      color: #f87171;
+    }
+
+    /* Section fichiers */
+    .files-card {
+      background: #1a1a2e;
+      border-radius: 12px;
+      padding: 28px;
+      border: 1px solid #2a2a4a;
+    }
+
+    .files-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .files-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .open-folder-btn {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid #2a2a4a;
+      color: #aaa;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .open-folder-btn:hover {
+      border-color: #e63946;
+      color: #fff;
+    }
+
+    .file-list {
+      list-style: none;
+    }
+
+    .file-list li {
+      padding: 10px 12px;
+      border-bottom: 1px solid #1f1f3a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .file-list li:last-child {
+      border-bottom: none;
+    }
+
+    .file-name {
+      color: #ddd;
+      word-break: break-all;
+      flex: 1;
+    }
+
+    .file-size {
+      color: #666;
+      margin-left: 16px;
+      white-space: nowrap;
+    }
+
+    .empty-msg {
+      color: #555;
+      font-size: 14px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1><span>&#9654;</span> Téléchargeur YouTube</h1>
+  </header>
+
+  <div class="container">
+    <!-- Carte téléchargement -->
+    <div class="download-card">
+      <div class="input-group">
+        <label for="url">URL de la vidéo YouTube</label>
+        <input
+          type="text"
+          id="url"
+          class="url-input"
+          placeholder="https://www.youtube.com/watch?v=..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <div class="input-group">
+        <label>Format de téléchargement</label>
+        <div class="type-selector">
+          <button class="type-btn active" data-type="video">
+            <span class="icon">&#127916;</span> Vidéo (MP4)
+          </button>
+          <button class="type-btn" data-type="audio">
+            <span class="icon">&#127925;</span> Audio (MP3)
+          </button>
+        </div>
+      </div>
+
+      <button class="download-btn" id="downloadBtn">Télécharger</button>
+
+      <!-- Progression -->
+      <div class="progress-section" id="progressSection">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">0%</div>
+        <div class="log-box" id="logBox"></div>
+      </div>
+
+      <div class="status-msg" id="statusMsg"></div>
+    </div>
+
+    <!-- Carte fichiers -->
+    <div class="files-card">
+      <div class="files-header">
+        <h2>Fichiers téléchargés</h2>
+        <button class="open-folder-btn" id="openFolderBtn">Ouvrir le dossier</button>
+      </div>
+      <ul class="file-list" id="fileList">
+        <li class="empty-msg">Aucun fichier pour le moment</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const urlInput = document.getElementById("url");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const progressSection = document.getElementById("progressSection");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const logBox = document.getElementById("logBox");
+    const statusMsg = document.getElementById("statusMsg");
+    const fileList = document.getElementById("fileList");
+    const openFolderBtn = document.getElementById("openFolderBtn");
+
+    let selectedType = "video";
+    let isDownloading = false;
+
+    // Sélecteur de type
+    document.querySelectorAll(".type-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (isDownloading) return;
+        document.querySelectorAll(".type-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedType = btn.dataset.type;
+      });
+    });
+
+    // Ouvrir le dossier
+    openFolderBtn.addEventListener("click", () => {
+      fetch("/api/open-folder", { method: "POST" });
+    });
+
+    // Formater la taille du fichier
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + " o";
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " Ko";
+      if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " Mo";
+      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " Go";
+    }
+
+    // Charger la liste des fichiers
+    async function loadFiles() {
+      try {
+        const res = await fetch("/api/files");
+        const files = await res.json();
+
+        if (files.length === 0) {
+          fileList.innerHTML = '<li class="empty-msg">Aucun fichier pour le moment</li>';
+          return;
+        }
+
+        fileList.innerHTML = files
+          .map(
+            (f) => `
+              <li>
+                <span class="file-name">${escapeHtml(f.name)}</span>
+                <span class="file-size">${formatSize(f.size)}</span>
+              </li>
+            `
+          )
+          .join("");
+      } catch {
+        // silencieux
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // Ajouter une ligne de log
+    function addLog(message, type) {
+      const line = document.createElement("div");
+      line.className = "log-line" + (type ? " log-" + type : "");
+      line.textContent = message;
+      logBox.appendChild(line);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    // Lancer le téléchargement
+    downloadBtn.addEventListener("click", () => {
+      const url = urlInput.value.trim();
+      if (!url) {
+        urlInput.focus();
+        return;
+      }
+
+      if (isDownloading) return;
+      isDownloading = true;
+
+      // Reset UI
+      downloadBtn.disabled = true;
+      downloadBtn.textContent = "Téléchargement en cours...";
+      progressSection.classList.add("visible");
+      progressBar.style.width = "0%";
+      progressText.textContent = "0%";
+      logBox.innerHTML = "";
+      statusMsg.className = "status-msg";
+      statusMsg.style.display = "none";
+
+      const params = new URLSearchParams({ url, type: selectedType });
+      const eventSource = new EventSource(`/api/download?${params}`);
+
+      eventSource.addEventListener("progress", (e) => {
+        const data = JSON.parse(e.data);
+        const pct = Math.round(data.percent);
+        progressBar.style.width = pct + "%";
+        progressText.textContent = pct + "%";
+      });
+
+      eventSource.addEventListener("log", (e) => {
+        const data = JSON.parse(e.data);
+        addLog(data.message);
+      });
+
+      eventSource.addEventListener("done", (e) => {
+        const data = JSON.parse(e.data);
+        eventSource.close();
+        isDownloading = false;
+        downloadBtn.disabled = false;
+        downloadBtn.textContent = "Télécharger";
+
+        if (data.success) {
+          progressBar.style.width = "100%";
+          progressText.textContent = "100%";
+          addLog(data.message, "success");
+          statusMsg.className = "status-msg success";
+          statusMsg.textContent = data.message;
+        } else {
+          addLog(data.message, "error");
+          statusMsg.className = "status-msg error";
+          statusMsg.textContent = data.message;
+        }
+
+        loadFiles();
+      });
+
+      eventSource.onerror = () => {
+        eventSource.close();
+        if (isDownloading) {
+          isDownloading = false;
+          downloadBtn.disabled = false;
+          downloadBtn.textContent = "Télécharger";
+          addLog("Connexion perdue avec le serveur", "error");
+          statusMsg.className = "status-msg error";
+          statusMsg.textContent = "Connexion perdue avec le serveur";
+        }
+      };
+    });
+
+    // Permettre Entrée dans le champ URL
+    urlInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") downloadBtn.click();
+    });
+
+    // Charger les fichiers au démarrage
+    loadFiles();
+  </script>
+</body>
+</html>
